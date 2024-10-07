@@ -1,0 +1,153 @@
+// auto-click.js
+window.addEventListener('load', function() {
+    var currentPage = 1; // Variable to track the current page
+    var productVariationClicked = false; // Flag to track if the product variation button has been clicked
+    var radioButtonClicked = false; // Flag to track if the radio button has been clicked
+    var finalCheckoutButtonClicked = false; // Flag to track if the final checkout button has been clicked
+
+    // Function to click the initial buttons
+    function clickButtons() {
+        var buttons = document.querySelectorAll('.sApkZm.SkhBL1.selection-box-unselected, .sApkZm.selection-box-unselected');
+        buttons.forEach(function(button) {
+            if (button) {
+                button.click();
+                console.log('Button clicked!');
+            }
+        });
+
+        if (buttons.length > 0) {
+            clearInterval(buttonIntervalId);
+        } else {
+            console.log('Buttons not found, retrying...');
+        }
+    }
+
+    // Function to check the price and potentially click the checkout button
+    function checkPriceAndCheckout() {
+        var priceElement = document.querySelector('.G27FPf');
+        var checkoutButton = document.querySelector('.btn.btn-solid-primary.btn--l.YuENex');
+
+        if (priceElement && checkoutButton) {
+            var priceText = priceElement.textContent.replace(/[^0-9]/g, ''); // Remove non-numeric characters
+            var price = parseFloat(priceText);
+
+            if (price < 10000) {
+                checkoutButton.click();
+                console.log('Price is below 10000, checkout button clicked!');
+                clearInterval(priceIntervalId);
+                clearInterval(refreshIntervalId); // Stop refreshing if price is below 10000
+            } else {
+                console.log('Price is above 10000, retrying...');
+            }
+        } else {
+            console.log('Price element or checkout button not found.');
+        }
+    }
+
+    // Function to click the next page button
+    function clickNextPageButton() {
+        var nextPageButton = document.querySelector('.SHq91i');
+
+        if (currentPage < 3 && nextPageButton) {
+            nextPageButton.click();
+            console.log('Next page button clicked!');
+            currentPage++;
+        } else {
+            console.log('No next page button found or max pages reached.');
+        }
+    }
+
+    // Function to check and click the product variation button
+    function checkAndClickProductVariation() {
+        var buttons = document.querySelectorAll('.product-variation');
+
+        buttons.forEach(function(button) {
+            if (button.textContent.trim() === 'Credit / Debit Card' && !productVariationClicked) {
+                button.click();
+                console.log('Product variation button with text "Credit / Debit Card" clicked on page 3!');
+                productVariationClicked = true; // Set flag to prevent multiple clicks
+                
+                // After clicking the product variation button, click the radio button
+                setTimeout(clickRadioButton, 500); // Added delay to ensure the page has processed the button click
+
+                clearInterval(productVariationIntervalId); // Stop checking once clicked
+            } else if (currentPage !== 3) {
+                console.log('Not on page 3, waiting to click product variation.');
+            } else {
+                console.log('Product variation button with text "Credit / Debit Card" not found or already clicked.');
+            }
+        });
+    }
+
+    // Function to click the radio button
+    function clickRadioButton() {
+        var radioButton = document.querySelector('.stardust-radio-button__outer-circle');
+
+        if (radioButton && !radioButtonClicked) {
+            radioButton.click();
+            console.log('Radio button clicked!');
+            radioButtonClicked = true; // Set flag to prevent multiple clicks
+
+            // After clicking the radio button, click the final checkout button
+            setTimeout(clickFinalCheckoutButton, 500); // Added delay to ensure the page has processed the radio button click
+        } else {
+            console.log('Radio button not found or already clicked, retrying...');
+        }
+    }
+
+    // Function to click the final checkout button
+    function clickFinalCheckoutButton() {
+        var finalCheckoutButton = document.querySelector('.stardust-button.stardust-button--primary.stardust-button--large.LtH6tW');
+
+        if (finalCheckoutButton && !finalCheckoutButtonClicked) {
+            finalCheckoutButton.click();
+            console.log('Final checkout button clicked!');
+            finalCheckoutButtonClicked = true; // Set flag to prevent multiple clicks
+
+            // Stop all intervals and refresh logic
+            clearInterval(buttonIntervalId);
+            clearInterval(priceIntervalId);
+            clearInterval(nextPageIntervalId);
+            clearInterval(productVariationIntervalId);
+            clearInterval(refreshIntervalId);
+        } else if (!finalCheckoutButton) {
+            console.log('Final checkout button not found, retrying...');
+        }
+    }
+
+    // Function to refresh the page if needed
+    function maybeRefreshPage() {
+        var nextPageButton = document.querySelector('.SHq91i');
+        if (!nextPageButton) {
+            var priceElement = document.querySelector('.G27FPf');
+            if (priceElement) {
+                var priceText = priceElement.textContent.replace(/[^0-9]/g, '');
+                var price = parseFloat(priceText);
+                if (price >= 11000) {
+                    console.log('Price is still 11000 or above, refreshing page...');
+                    window.location.reload(); // Refresh if price is still 11000 or above
+                }
+            } else {
+                console.log('Price element not found, refreshing page...');
+                window.location.reload(); // Refresh if price element is not found
+            }
+        } else {
+            console.log('On next page, not refreshing.');
+        }
+    }
+
+    // Interval to click the initial buttons
+    var buttonIntervalId = setInterval(clickButtons, 500);
+
+    // Interval to check the price and potentially refresh the page
+    var priceIntervalId = setInterval(checkPriceAndCheckout, 500);
+
+    // Interval to click the next page button
+    var nextPageIntervalId = setInterval(clickNextPageButton, 500);
+
+    // Interval to check and click the product variation button
+    var productVariationIntervalId = setInterval(checkAndClickProductVariation, 1000); // Adjusted interval for product variation
+
+    // Interval to potentially refresh the page if the price condition is not met
+    var refreshIntervalId = setInterval(maybeRefreshPage, 2000); // Check every 2 seconds
+});
